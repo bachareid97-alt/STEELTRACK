@@ -16,7 +16,12 @@ DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///./data/steeltrack.db")
 JWT_SECRET = os.environ.get("JWT_SECRET", "change-this-secret")
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 8
 
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+# Create engine conditionally based on DB type
+if DATABASE_URL.startswith("sqlite"):
+    engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+else:
+    engine = create_engine(DATABASE_URL)
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
