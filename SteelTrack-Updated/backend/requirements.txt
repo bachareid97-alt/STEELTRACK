@@ -6,3 +6,8 @@ PyJWT
 python-dotenv
 psycopg[binary]
 alembic
+boto3
+aioredis
+redis
+pytest
+httpx

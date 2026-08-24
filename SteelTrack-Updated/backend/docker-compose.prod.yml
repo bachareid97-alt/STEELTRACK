@@ -16,8 +16,14 @@ services:
       - ADMIN_PASS
       - JWT_SECRET
       - DATABASE_URL
+      - S3_ENDPOINT
+      - AWS_ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY
+      - S3_BUCKET
+      - MINIO_USE_PATH_STYLE
     depends_on:
       - db
+      - redis
     command: ["/app/entrypoint.sh"]
     restart: unless-stopped
 
@@ -29,6 +35,13 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-steeltrack}
     volumes:
       - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--save", "60", "1"]
+    volumes:
+      - redisdata:/data
     restart: unless-stopped
 
   nginx:
@@ -45,3 +58,4 @@ services:
 
 volumes:
   pgdata:
+  redisdata:
