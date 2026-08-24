@@ -1,0 +1,14 @@
+version: '3.8'
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./app:/app/app
+      - ./data:/app/data
+    environment:
+      - ADMIN_USER=admin
+      - ADMIN_PASS=admin
+      - JWT_SECRET=change-this-secret
+    restart: unless-stopped
