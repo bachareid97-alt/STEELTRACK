@@ -1,11 +1,13 @@
+from __future__ import annotations
 import os
 import json
-import time
 from datetime import datetime, timedelta
 from typing import Dict, Any
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, ForeignKey
 from sqlalchemy.orm import sessionmaker, declarative_base, Session, relationship
@@ -30,20 +32,21 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, unique=True, index=True, nullable=False)
-    hashed_password = Column(String, nullable=False)
-    role = Column(String, default="viewer")
+    username = Column(String(255), unique=True, index=True, nullable=False)
+    hashed_password = Column(String(255), nullable=False)
+    role = Column(String(50), default="viewer")
 
 class KV(Base):
     __tablename__ = "kv"
     id = Column(Integer, primary_key=True, index=True)
-    key = Column(String, unique=True, index=True, nullable=False)
+    key = Column(String(255), unique=True, index=True, nullable=False)
     value = Column(Text)
     version = Column(Integer, default=1)
     last_updated = Column(DateTime, default=datetime.utcnow)
     last_updated_by = Column(Integer, ForeignKey("users.id"), nullable=True)
     user = relationship("User", lazy="joined")
 
+# ensure tables exist if no alembic run
 Base.metadata.create_all(bind=engine)
 
 # --- Utilities ---
@@ -90,6 +93,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Serve bundled static frontend to make the product self-contained
+static_dir = os.path.join(os.path.dirname(__file__), "static")
+if os.path.isdir(static_dir):
+    app.mount("/static", StaticFiles(directory=static_dir), name="static")
+
 
 # Seed admin user if not present
 def seed_admin():
@@ -141,8 +150,17 @@ def login(p: LoginPayload, db: Session = Depends(get_db)):
     return {"access_token": access_token, "token_type": "bearer"}
 
 @app.get("/api/me")
-def me(current: User = Depends(lambda token=None, db=Depends(get_db): get_current_user(token, db))):
+def me(token: str = None, db: Session = Depends(get_db)):
+    current = get_current_user(token, db)
     return {"username": current.username, "role": current.role}
+
+# Serve the static index as root if present
+@app.get("/")
+def root():
+    index_path = os.path.join(static_dir, "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path, media_type='text/html')
+    return {"status": "ok"}
 
 # --- WebSocket manager ---
 class ConnectionManager:

@@ -1,0 +1,47 @@
+version: '3.8'
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./app:/app/app
+      - ./data:/app/data
+      - ./alembic:/app/alembic
+      - ./alembic.ini:/app/alembic.ini
+    env_file:
+      - ./.env
+    environment:
+      - ADMIN_USER
+      - ADMIN_PASS
+      - JWT_SECRET
+      - DATABASE_URL
+    depends_on:
+      - db
+    command: ["/app/entrypoint.sh"]
+    restart: unless-stopped
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-steeltrack}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:stable-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/steeltrack.conf:/etc/nginx/conf.d/steeltrack.conf:ro
+      - ./nginx/certs:/etc/letsencrypt
+    depends_on:
+      - app
+    restart: unless-stopped
+
+volumes:
+  pgdata:
