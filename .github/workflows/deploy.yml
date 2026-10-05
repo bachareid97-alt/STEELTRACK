@@ -1,0 +1,66 @@
+name: Build and deploy SteelTrack
+
+# Every push to main rebuilds the cloud version from the app file named in
+# steeltrack.config.json and publishes it (page + security rules) to Firebase.
+# Needs one repository secret: FIREBASE_SERVICE_ACCOUNT (see SETUP.md, step 8).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Check the sync logic
+        run: node test/codec.test.js
+
+      - name: Build the cloud version
+        run: python3 tools/build.py
+
+      - name: Keep the built app file (for the one-time "This browser" migration)
+        uses: actions/upload-artifact@v4
+        with:
+          name: steeltrack-cloud
+          path: public/index.html
+          retention-days: 30
+
+      - name: Deploy to Firebase
+        if: github.event_name != 'pull_request'
+        env:
+          SA_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          if [ -z "$SA_JSON" ]; then
+            echo "::warning::FIREBASE_SERVICE_ACCOUNT secret is not set yet - built but not deployed (see SETUP.md step 8)."
+            exit 0
+          fi
+          echo "$SA_JSON" > "$RUNNER_TEMP/sa.json"
+          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/sa.json"
+          PROJECT=$(python3 -c "import json;print(json.load(open('steeltrack.config.json'))['firebase']['projectId'])")
+          npx --yes firebase-tools@14 deploy \
+            --only hosting,database,firestore:rules,storage \
+            --project "$PROJECT" --non-interactive --force
+
+      - name: Allow the app to download attachments (one-time CORS setting)
+        if: github.event_name != 'pull_request'
+        continue-on-error: true
+        env:
+          SA_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          [ -z "$SA_JSON" ] && exit 0
+          echo "$SA_JSON" > "$RUNNER_TEMP/sa.json"
+          gcloud auth activate-service-account --key-file="$RUNNER_TEMP/sa.json"
+          BUCKET=$(python3 -c "import json;print(json.load(open('steeltrack.config.json'))['firebase']['storageBucket'])")
+          gcloud storage buckets update "gs://$BUCKET" --cors-file=cors.json

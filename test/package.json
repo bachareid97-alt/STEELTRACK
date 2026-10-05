@@ -1,0 +1,6 @@
+{
+  "name": "steeltrack-tests",
+  "private": true,
+  "description": "Local test stand-in for Firebase (see e2e.py)",
+  "dependencies": { "ws": "^8.18.0" }
+}

@@ -1,0 +1,10 @@
+# build output (made by tools/build.py; the GitHub workflow rebuilds it)
+public/
+build/
+# test tooling
+test/node_modules/
+test/_e2e*
+__pycache__/
+# Firebase CLI local files
+.firebase/
+*.log

@@ -1,0 +1,75 @@
+{
+  "rules": {
+    // ------------------------------------------------------------------
+    // SteelTrack — Realtime Database security rules
+    // __ADMIN_EMAIL__ is replaced by tools/build.py with the first admin's
+    // email (from steeltrack.config.json). That person is always an admin
+    // once their email is confirmed; they can make others admins.
+    // ------------------------------------------------------------------
+
+    "users": {
+      // Admins can see the whole team.
+      ".read": "auth != null && ((auth.token.email === '__ADMIN_EMAIL__' && auth.token.email_verified === true) || (root.child('users').child(auth.uid).child('admin').val() === true && root.child('users').child(auth.uid).child('approved').val() === true && root.child('users').child(auth.uid).child('disabled').val() !== true))",
+      "$uid": {
+        // Everyone can see their own account record.
+        ".read": "auth != null && auth.uid === $uid",
+        // Admins change anyone's record. A new person may only create their
+        // own record, unapproved, with no admin rights and no access.
+        ".write": "auth != null && ((auth.token.email === '__ADMIN_EMAIL__' && auth.token.email_verified === true) || (root.child('users').child(auth.uid).child('admin').val() === true && root.child('users').child(auth.uid).child('approved').val() === true && root.child('users').child(auth.uid).child('disabled').val() !== true) || (auth.uid === $uid && !data.exists() && newData.child('approved').val() === false && newData.child('admin').val() === false && !newData.child('perms').exists() && newData.child('email').val() === auth.token.email))",
+        ".validate": "newData.hasChildren(['email', 'approved', 'admin'])",
+        "email":    { ".validate": "newData.isString() && newData.val().length < 200" },
+        "name":     { ".validate": "newData.isString() && newData.val().length < 120" },
+        "approved": { ".validate": "newData.isBoolean()" },
+        "admin":    { ".validate": "newData.isBoolean()" },
+        "disabled": { ".validate": "newData.isBoolean()" },
+        "created":  { ".validate": "newData.isNumber()" },
+        "updated":  { ".validate": "newData.isNumber()" },
+        "updatedBy":{ ".validate": "newData.isString()" },
+        "perms": {
+          "$section": { ".validate": "($section === 'projects' || $section === 'technical' || $section === 'factory' || $section === 'site' || $section === 'office') && (newData.val() === 'none' || newData.val() === 'view' || newData.val() === 'edit')" }
+        },
+        "$other": { ".validate": false }
+      }
+    },
+
+    "data": {
+      // Admins can read everything at once (the "Download all cloud data" backup).
+      ".read": "auth != null && ((auth.token.email === '__ADMIN_EMAIL__' && auth.token.email_verified === true) || (root.child('users').child(auth.uid).child('admin').val() === true && root.child('users').child(auth.uid).child('approved').val() === true && root.child('users').child(auth.uid).child('disabled').val() !== true))",
+      // Activity log etc.: every approved, active team member.
+      "common": {
+        "$key": {
+          ".read":  "auth != null && ((auth.token.email === '__ADMIN_EMAIL__' && auth.token.email_verified === true) || (root.child('users').child(auth.uid).child('approved').val() === true && root.child('users').child(auth.uid).child('disabled').val() !== true))",
+          ".write": "auth != null && ((auth.token.email === '__ADMIN_EMAIL__' && auth.token.email_verified === true) || (root.child('users').child(auth.uid).child('approved').val() === true && root.child('users').child(auth.uid).child('disabled').val() !== true))"
+        }
+      },
+      // Section data: View or Edit to read, Edit to change. Admins: everything.
+      "$section": {
+        "$key": {
+          ".read":  "auth != null && ($section === 'projects' || $section === 'technical' || $section === 'factory' || $section === 'site' || $section === 'office') && ((auth.token.email === '__ADMIN_EMAIL__' && auth.token.email_verified === true) || (root.child('users').child(auth.uid).child('approved').val() === true && root.child('users').child(auth.uid).child('disabled').val() !== true && (root.child('users').child(auth.uid).child('admin').val() === true || root.child('users').child(auth.uid).child('perms').child($section).val() === 'view' || root.child('users').child(auth.uid).child('perms').child($section).val() === 'edit')))",
+          ".write": "auth != null && ($section === 'projects' || $section === 'technical' || $section === 'factory' || $section === 'site' || $section === 'office') && ((auth.token.email === '__ADMIN_EMAIL__' && auth.token.email_verified === true) || (root.child('users').child(auth.uid).child('approved').val() === true && root.child('users').child(auth.uid).child('disabled').val() !== true && (root.child('users').child(auth.uid).child('admin').val() === true || root.child('users').child(auth.uid).child('perms').child($section).val() === 'edit')))"
+        }
+      }
+    },
+
+    // Daily previous-version copies. Only admins can read or restore them.
+    // Anyone with Edit on a section may add (never overwrite) today's copy.
+    "backups": {
+      ".read":  "auth != null && ((auth.token.email === '__ADMIN_EMAIL__' && auth.token.email_verified === true) || (root.child('users').child(auth.uid).child('admin').val() === true && root.child('users').child(auth.uid).child('approved').val() === true && root.child('users').child(auth.uid).child('disabled').val() !== true))",
+      ".write": "auth != null && ((auth.token.email === '__ADMIN_EMAIL__' && auth.token.email_verified === true) || (root.child('users').child(auth.uid).child('admin').val() === true && root.child('users').child(auth.uid).child('approved').val() === true && root.child('users').child(auth.uid).child('disabled').val() !== true))",
+      "$day": {
+        "$section": {
+          "$key": {
+            ".write": "auth != null && !data.exists() && newData.exists() && root.child('users').child(auth.uid).child('approved').val() === true && root.child('users').child(auth.uid).child('disabled').val() !== true && (root.child('users').child(auth.uid).child('perms').child($section).val() === 'edit' || $section === 'common')"
+          }
+        }
+      }
+    },
+    "backupDays": {
+      ".read":  "auth != null && ((auth.token.email === '__ADMIN_EMAIL__' && auth.token.email_verified === true) || (root.child('users').child(auth.uid).child('admin').val() === true && root.child('users').child(auth.uid).child('approved').val() === true && root.child('users').child(auth.uid).child('disabled').val() !== true))",
+      ".write": "auth != null && ((auth.token.email === '__ADMIN_EMAIL__' && auth.token.email_verified === true) || (root.child('users').child(auth.uid).child('admin').val() === true && root.child('users').child(auth.uid).child('approved').val() === true && root.child('users').child(auth.uid).child('disabled').val() !== true))",
+      "$day": {
+        ".write": "auth != null && newData.val() === true && root.child('users').child(auth.uid).child('approved').val() === true && root.child('users').child(auth.uid).child('disabled').val() !== true"
+      }
+    }
+  }
+}
