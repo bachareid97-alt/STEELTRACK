@@ -1,0 +1,127 @@
+/* SteelTrack Cloud — login screens, status chip, access banners */
+html.st-locked body > *:not(#stCover):not(script):not(style){ visibility:hidden !important; }
+body .login-gate{ display:none !important; }   /* old access-code gate, replaced by personal logins */
+
+#stCover{
+  position:fixed; inset:0; z-index:100000; display:flex; align-items:center; justify-content:center;
+  background:radial-gradient(1200px 600px at 50% -10%, #16213a 0%, #0a0e17 60%);
+  color:#e6ebf5; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  padding:16px; overflow:auto;
+}
+#stCover[hidden]{ display:none; }
+.st-card{
+  width:100%; max-width:400px; background:#0f1524; border:1px solid #1e293b; border-radius:14px;
+  padding:26px 24px 22px; box-shadow:0 20px 60px rgba(0,0,0,.45);
+}
+.st-logo{ width:44px;height:44px;border-radius:10px;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,#f0883e,#c96a2a);color:#fff;font-weight:800;letter-spacing:.5px; }
+.st-card h2{ margin:0 0 4px; text-align:center; font-size:19px; }
+.st-sub{ margin:0 0 18px; text-align:center; color:#8b98b0; font-size:13px; line-height:1.5; }
+.st-field{ margin-bottom:12px; }
+.st-field label{ display:block; font-size:12px; color:#8b98b0; margin-bottom:5px; font-weight:600; }
+.st-field input{
+  width:100%; box-sizing:border-box; padding:11px 12px; border-radius:8px; font-size:15px;
+  background:#0c1220; border:1px solid #1e293b; color:#e6ebf5;
+}
+.st-field input:focus{ outline:none; border-color:#f0883e; }
+.st-btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:6px; cursor:pointer;
+  padding:10px 14px; border-radius:8px; border:1px solid #1e293b; background:#141c2f; color:#e6ebf5;
+  font-size:13.5px; font-weight:600;
+}
+.st-btn:hover{ border-color:#2c3a55; }
+.st-btn[disabled]{ opacity:.55; cursor:default; }
+.st-btn-primary{ width:100%; background:#f0883e; border-color:#f0883e; color:#111; font-size:15px; padding:11px 14px; }
+.st-btn-primary:hover{ background:#f59a55; }
+.st-btn-sm{ padding:6px 10px; font-size:12px; }
+.st-btn-danger{ color:#fca5a5; border-color:#7f1d1d; }
+.st-btn-ok{ color:#86efac; border-color:#14532d; }
+.st-links{ display:flex; justify-content:space-between; gap:10px; margin-top:14px; font-size:12.5px; }
+.st-link{ background:none; border:none; padding:0; color:#f0b27a; cursor:pointer; font-size:12.5px; }
+.st-msg{ display:none; margin:10px 0 0; padding:9px 11px; border-radius:8px; font-size:12.5px; line-height:1.45; }
+.st-msg.err{ display:block; background:rgba(239,68,68,.12); color:#fca5a5; border:1px solid rgba(239,68,68,.3); }
+.st-msg.ok{ display:block; background:rgba(34,197,94,.1); color:#86efac; border:1px solid rgba(34,197,94,.3); }
+.st-spinner{ width:28px;height:28px;border-radius:50%;border:3px solid #1e293b;border-top-color:#f0883e;margin:6px auto 14px;animation:stspin .8s linear infinite; }
+@keyframes stspin{ to{ transform:rotate(360deg); } }
+
+/* status chip */
+#stChip{
+  position:fixed; right:14px; bottom:14px; z-index:9000; display:flex; align-items:center; gap:7px;
+  padding:7px 12px; border-radius:999px; background:#0f1524; border:1px solid #1e293b; color:#cbd5e1;
+  font:600 12px/1.2 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; cursor:pointer;
+  box-shadow:0 6px 18px rgba(0,0,0,.35); max-width:calc(100vw - 28px);
+}
+#stChip .dot{ width:8px;height:8px;border-radius:50%;background:#64748b;flex:none; }
+#stChip .st-chip-text{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+#stChip.live .dot{ background:#22c55e; }
+#stChip.busy .dot{ background:#eab308; }
+#stChip.off .dot{ background:#ef4444; }
+#stChip.attn{ border-color:#f0883e; color:#fff; }
+#stMenu{
+  position:fixed; right:14px; bottom:54px; z-index:9001; width:280px; max-width:calc(100vw - 28px);
+  background:#0f1524; border:1px solid #1e293b; border-radius:12px; padding:14px; color:#e6ebf5;
+  font:13px/1.45 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; box-shadow:0 12px 30px rgba(0,0,0,.5);
+}
+#stMenu[hidden]{ display:none; }
+#stMenu .st-menu-name{ font-weight:700; }
+#stMenu .st-menu-email{ color:#8b98b0; font-size:12px; margin-bottom:10px; word-break:break-all; }
+#stMenu .st-menu-rows{ margin:0 0 12px; font-size:12.5px; }
+#stMenu .st-menu-row{ display:flex; justify-content:space-between; gap:10px; padding:4px 0; border-bottom:1px solid #182236; }
+#stMenu .st-menu-row .lvl-edit{ color:#86efac; }
+#stMenu .st-menu-row .lvl-view{ color:#fde68a; }
+#stMenu .st-menu-row .lvl-none{ color:#64748b; }
+
+/* the app's own messages sit just above the status chip instead of under it */
+body .toast{ bottom:58px !important; }
+/* toasts (used when the app's own toast isn't available) */
+#stToasts{ position:fixed; left:50%; bottom:64px; transform:translateX(-50%); z-index:100001; display:flex; flex-direction:column; gap:8px; align-items:center; pointer-events:none; width:min(92vw,520px); }
+.st-toast{ background:#111a2e; border:1px solid #2c3a55; color:#e6ebf5; padding:10px 14px; border-radius:10px; font:13px/1.45 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; box-shadow:0 8px 24px rgba(0,0,0,.45); }
+
+/* access */
+.st-hidden{ display:none !important; }
+.st-ro-banner{
+  display:flex; align-items:center; gap:8px; margin:0 0 12px; padding:9px 12px; border-radius:9px;
+  background:rgba(234,179,8,.1); border:1px solid rgba(234,179,8,.35); color:#fde68a; font-size:12.5px;
+}
+.maintab-panel.st-ro .icon-btn,
+.maintab-panel.st-ro .btn-danger{ display:none !important; }
+/* view-only: lock the editable cells inside tables (filters and search above the tables keep working) */
+.maintab-panel.st-ro input.text-edit,
+.maintab-panel.st-ro td[contenteditable],
+.maintab-panel.st-ro table input,
+.maintab-panel.st-ro table select,
+.maintab-panel.st-ro table textarea,
+.maintab-panel.st-ro table [data-action="attach"],
+.maintab-panel.st-ro table [data-action="reattach"],
+.maintab-panel.st-ro table [data-action="delete"]{ pointer-events:none; opacity:.75; }
+
+/* admin page */
+.st-admin{ color:#e6ebf5; }
+.st-admin h3{ margin:0 0 4px; font-size:16px; }
+.st-admin .st-help{ color:#8b98b0; font-size:12.5px; margin:0 0 12px; line-height:1.5; }
+.st-panel{ background:#0f1524; border:1px solid #1e293b; border-radius:12px; padding:16px; margin-bottom:16px; }
+.st-table-wrap{ overflow-x:auto; }
+.st-table{ width:100%; border-collapse:collapse; font-size:12.5px; min-width:860px; table-layout:auto; }
+.st-table td:first-child{ max-width:190px; word-break:break-word; }
+.st-table .st-full{ color:#f0b27a; font-size:12px; font-weight:600; }
+.st-table th{ text-align:left; color:#8b98b0; font-weight:700; font-size:10.5px; text-transform:uppercase; letter-spacing:.4px; padding:8px 4px; border-bottom:1px solid #1e293b; white-space:nowrap; }
+.st-table td{ padding:8px 4px; border-bottom:1px solid #182236; vertical-align:middle; }
+.st-table select{ background:#0c1220; color:#e6ebf5; border:1px solid #1e293b; border-radius:6px; padding:5px 4px; font-size:11.5px; width:90px; }
+.st-table td .st-badge{ margin:1px 0; }
+.st-table select.lvl-edit{ border-color:#14532d; color:#86efac; }
+.st-table select.lvl-view{ border-color:#713f12; color:#fde68a; }
+.st-table select.lvl-none{ color:#64748b; }
+.st-badge{ display:inline-block; padding:2px 8px; border-radius:999px; font-size:11px; font-weight:700; }
+.st-badge.pending{ background:rgba(234,179,8,.15); color:#fde68a; }
+.st-badge.active{ background:rgba(34,197,94,.13); color:#86efac; }
+.st-badge.disabled{ background:rgba(239,68,68,.13); color:#fca5a5; }
+.st-badge.admin{ background:rgba(240,136,62,.15); color:#f0b27a; margin-left:6px; }
+.st-row-actions{ display:flex; gap:6px; flex-wrap:wrap; }
+.st-table .st-row-actions{ flex-direction:column; align-items:flex-start; gap:4px; }
+.st-presets{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
+.st-mig-row td:first-child{ font-weight:600; }
+.st-mig-src{ white-space:nowrap; }
+.st-sources{ display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:10px; margin-bottom:12px; }
+.st-source{ border:1px dashed #2c3a55; border-radius:10px; padding:12px; font-size:12.5px; color:#cbd5e1; }
+.st-source b{ display:block; margin-bottom:4px; color:#e6ebf5; }
+.st-source .st-src-status{ margin-top:8px; color:#86efac; font-size:12px; min-height:16px; }

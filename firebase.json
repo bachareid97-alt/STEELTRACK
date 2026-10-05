@@ -1,0 +1,23 @@
+{
+  "hosting": {
+    "public": "public",
+    "ignore": ["firebase.json", "**/.*"],
+    "headers": [
+      {
+        "source": "**/*.@(html|json|js)",
+        "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+      },
+      {
+        "source": "**",
+        "headers": [
+          { "key": "X-Content-Type-Options", "value": "nosniff" },
+          { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+          { "key": "X-Robots-Tag", "value": "noindex" }
+        ]
+      }
+    ]
+  },
+  "database": { "rules": "build/rules/database.rules.json" },
+  "firestore": { "rules": "build/rules/firestore.rules" },
+  "storage": { "rules": "build/rules/storage.rules" }
+}

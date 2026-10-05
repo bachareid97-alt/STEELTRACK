@@ -1,0 +1,38 @@
+rules_version = '2';
+// SteelTrack — Cloud Storage rules (attachments: PDF, Excel, AutoCAD, IFC, photos).
+// Files live at files/<section>/<module>/<file>. Reading needs View or Edit
+// on that section, uploading/deleting needs Edit. Account records are read
+// from the Firestore copy. __ADMIN_EMAIL__ is filled in by tools/build.py.
+service firebase.storage {
+  match /b/{bucket}/o {
+    function bootAdmin() {
+      return request.auth != null && request.auth.token.email == '__ADMIN_EMAIL__' && request.auth.token.email_verified == true;
+    }
+    function hasProfile() {
+      return request.auth != null && firestore.exists(/databases/(default)/documents/users/$(request.auth.uid));
+    }
+    function me() {
+      return firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data;
+    }
+    function active() {
+      return hasProfile() && me().get('approved', false) == true && me().get('disabled', false) != true;
+    }
+    function level(section) {
+      return me().get('admin', false) == true ? 'edit' : me().get('perms', {}).get(section, 'none');
+    }
+    function validSection(section) {
+      return section in ['projects', 'technical', 'factory', 'site', 'office'];
+    }
+
+    match /files/{section}/{rest=**} {
+      allow read: if validSection(section) && (bootAdmin() || (active() && level(section) in ['view', 'edit']));
+      allow write: if validSection(section)
+        && (bootAdmin() || (active() && level(section) == 'edit'))
+        && (request.resource == null || request.resource.size < 2 * 1024 * 1024 * 1024);
+    }
+
+    match /{other=**} {
+      allow read, write: if false;
+    }
+  }
+}

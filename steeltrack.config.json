@@ -1,0 +1,13 @@
+{
+  "appSource": "SteelTrack-Updated/FACTORY_TRACK_AND_STOCK_2026-08-23_0802.html",
+  "adminEmail": "orientalsfabrication@gmail.com",
+  "firebase": {
+    "apiKey": "PASTE_FROM_FIREBASE_CONSOLE",
+    "authDomain": "PASTE_FROM_FIREBASE_CONSOLE",
+    "databaseURL": "PASTE_FROM_FIREBASE_CONSOLE",
+    "projectId": "PASTE_FROM_FIREBASE_CONSOLE",
+    "storageBucket": "PASTE_FROM_FIREBASE_CONSOLE",
+    "messagingSenderId": "PASTE_FROM_FIREBASE_CONSOLE",
+    "appId": "PASTE_FROM_FIREBASE_CONSOLE"
+  }
+}

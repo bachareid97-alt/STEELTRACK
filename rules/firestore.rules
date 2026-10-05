@@ -1,0 +1,33 @@
+rules_version = '2';
+// SteelTrack — Firestore rules.
+// Firestore only holds a copy of each person's account record, so that the
+// file-storage rules (which can't read the Realtime Database) can check
+// what each person may open or upload. __ADMIN_EMAIL__ is filled in by
+// tools/build.py.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function bootAdmin() {
+      return request.auth != null && request.auth.token.email == '__ADMIN_EMAIL__' && request.auth.token.email_verified == true;
+    }
+    function me() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    function isAdmin() {
+      return bootAdmin() || (request.auth != null
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && me().get('admin', false) == true && me().get('approved', false) == true && me().get('disabled', false) != true);
+    }
+
+    match /users/{uid} {
+      allow read: if request.auth != null && (request.auth.uid == uid || isAdmin());
+      allow create: if isAdmin() || (request.auth != null && request.auth.uid == uid
+        && request.resource.data.approved == false && request.resource.data.admin == false
+        && !('perms' in request.resource.data) && request.resource.data.email == request.auth.token.email);
+      allow update, delete: if isAdmin();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
